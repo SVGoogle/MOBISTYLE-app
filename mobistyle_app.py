@@ -13,8 +13,9 @@ def main():
 
     # Sidebar layout
     st.sidebar.header('Visualization Features')
-    room_name = st.sidebar.selectbox('Select Room', ('Room 1', 'Room 2', 'Room 3', 'Room 4',
-                                                     'Room 5', 'Room 6', 'Room 7', 'Room 8'))
+    room_name = st.sidebar.selectbox('Select Room', ['Room %d' % i for i in range(1, 9)])
+
+    st.sidebar.selectbox('Duration', ('15 minutes', 'Monthly', 'Yearly'))
 
     about_project = st.sidebar.beta_expander('About project')
     about_project.write("""
