@@ -26,7 +26,6 @@ def main():
     - Deliverable: D6.2
     """)
 
-
     expander = st.beta_expander("Room description")
     expander.write("Here you could put in some really, really long explanations...")
 
