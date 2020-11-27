@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from PIL import Image
 
 
 def main():
@@ -10,6 +11,8 @@ def main():
     st.write("""     
     This app explores Indoor Air Quality (IAQ) at several educational office rooms.    
         """)
+    with st.beta_expander("Building description"):
+        st.write("Describe building type, location, HVAC system...")
 
     # Sidebar layout
     st.sidebar.header('Visualization Features')
@@ -26,11 +29,35 @@ def main():
     - Deliverable: D6.2
     """)
 
-    expander = st.beta_expander("Room description")
-    expander.write("Here you could put in some really, really long explanations...")
+    # ROOM VISUALIZATION
+    st.header(f'{room_name}')
+    with st.beta_expander('Description'):
+        st.write(f"Number of employees, size, window orientation ...")
+
+    st.subheader('IAQ parameters')
+    options_iaq = st.multiselect('Select',
+                                 ['Temperature', 'RH', 'CO2 levels', 'VOC levels'],
+                                 ['Temperature'])
+    for option in options_iaq:
+        if option == 'Temperature':
+            image = Image.open('./Results/Figures/boxplot_monthly_temp_R3N0808.png')
+            st.image(image, use_column_width=True)
+
+    st.subheader('Thermal Comfort categories')
+
+    st.subheader('User behavior')
+    options_user = st.multiselect('Select',
+                                  ['Window opening count', 'Room occupied time', 'Window open time'],
+                                  ['Window opening count'])
+
+    st.subheader('Outdoor climate')
+    options_out = st.multiselect('Select',
+                                  ['Temperature', 'RH', 'Solar radiation'],
+                                  ['Temperature'])
 
     if st.button('Correlation Heatmap'):
         pass
+
     st.bar_chart({"data": [1, 5, 2, 6, 2, 1]})
 
     with st.beta_expander("See explanation"):
