@@ -14,11 +14,26 @@ def main():
     with st.beta_expander("Building description"):
         st.write("Describe building type, location, HVAC system...")
 
+    col1, col2 = st.beta_columns(2)
+    with col1:
+        st.header("Col 1")
+        if st.button('Room 1'):
+            st.write("This is inside the container")
+
+    st.write("This is outside the container")
+
+    with col2:
+        st.header("Col 2")
+        if st.button('Room 2'):
+            st.write("This is inside the container")
+
+
+
     # Sidebar layout
     st.sidebar.header('Visualization Features')
     room_name = st.sidebar.selectbox('Select Room', ['Room %d' % i for i in range(1, 9)])
 
-    st.sidebar.selectbox('Duration', ('15 minutes', 'Monthly', 'Yearly'))
+    duration = st.sidebar.select_slider('Duration', options=['15 min', '1 month', '1 year'])
 
     about_project = st.sidebar.beta_expander('About project')
     about_project.write("""
