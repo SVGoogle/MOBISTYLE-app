@@ -11,8 +11,43 @@ def main():
     st.write("""     
     This app explores Indoor Air Quality (IAQ) at several educational office rooms.    
         """)
+
+    room_lst = ['R3N0808', 'R2N0805', 'K1N0623', 'K3N0605', 'R3N0644', 'K1N0624', 'K3N0618', 'R2N0634']
+    room_names = ['Room %d' % i for i in range(1, 9)]
+    room_dct = dict(zip(room_names, room_lst))
+
+    room_info = pd.read_excel('./Data/room_info.xlsx', index_col='Room_ID', parse_dates=True).loc[room_lst, ]
+    room_info = room_info.rename(index=dict(zip( room_lst, room_names)))
+
+    hdd = pd.read_excel('./Data/HDDs_SL.xlsx', index_col='Timestamp', parse_dates=True,
+                        usecols=[0, 1, 2], nrows=25)
+    outdoor_data = pd.read_csv('./Data/outdoor_data.csv', parse_dates=True, index_col='Timestamp')
+
+    # suppress_st_warning=True
+    @st.cache()
+    def get_data():
+        dtypes = {
+            'LED': 'category',
+            'App': 'category',
+            'Monitoring_Period': 'category',
+            'HEAT_COOL': 'category',
+            'Category_TEMP': 'category',
+            'Category_RH': 'category',
+            'Category_CO2': 'category',
+            'Category_VOC': 'category'
+        }
+        data_dct = {room:  pd.read_csv(
+            f'./Data/Data_{room}.csv',
+            dtype=dtypes,
+            parse_dates=True,
+            index_col='Timestamp') for room in room_lst}
+        return data_dct
+
+    df = get_data()
+
     with st.beta_expander("Building description"):
         st.write("Describe building type, location, HVAC system...")
+        st.write(room_info)
 
     col1, col2 = st.beta_columns(2)
     with col1:
@@ -27,11 +62,9 @@ def main():
         if st.button('Room 2'):
             st.write("This is inside the container")
 
-
-
     # Sidebar layout
     st.sidebar.header('Visualization Features')
-    room_name = st.sidebar.selectbox('Select Room', ['Room %d' % i for i in range(1, 9)])
+    room_name = st.sidebar.selectbox('Select Room', room_names)
 
     duration = st.sidebar.select_slider('Duration', options=['15 min', '1 month', '1 year'])
 
@@ -48,6 +81,7 @@ def main():
     st.header(f'{room_name}')
     with st.beta_expander('Description'):
         st.write(f"Number of employees, size, window orientation ...")
+        st.write(room_info.loc[room_name, ])
 
     st.subheader('IAQ parameters')
     options_iaq = st.multiselect('Select',
@@ -82,6 +116,7 @@ def main():
     ...         be random.
     ...     """)
         st.image("https://static.streamlit.io/examples/dice.jpg")
+
 
 
 if __name__ == '__main__':
