@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from PIL import Image
+from statplots import *
 
 
 def main():
@@ -17,11 +18,15 @@ def main():
     room_dct = dict(zip(room_names, room_lst))
 
     room_info = pd.read_excel('./Data/room_info.xlsx', index_col='Room_ID', parse_dates=True).loc[room_lst, ]
-    room_info = room_info.rename(index=dict(zip( room_lst, room_names)))
+    room_info = room_info.rename(index=dict(zip(room_lst, room_names)))
 
     hdd = pd.read_excel('./Data/HDDs_SL.xlsx', index_col='Timestamp', parse_dates=True,
                         usecols=[0, 1, 2], nrows=25)
     outdoor_data = pd.read_csv('./Data/outdoor_data.csv', parse_dates=True, index_col='Timestamp')
+    BL_start, BL_end = '2018-02-1', '2019-02-1'
+    MS_start, MS_end = '2019-02-1', '2020-02-1'
+    outdoor_data.loc[BL_start: BL_end, 'Monitoring_Period'] = 'BASELINE'
+    outdoor_data.loc[MS_start: MS_end, 'Monitoring_Period'] = 'MOBISTYLE'
 
     # suppress_st_warning=True
     @st.cache()
@@ -49,20 +54,7 @@ def main():
         st.write("Describe building type, location, HVAC system...")
         st.write(room_info)
 
-    col1, col2 = st.beta_columns(2)
-    with col1:
-        st.header("Col 1")
-        if st.button('Room 1'):
-            st.write("This is inside the container")
-
-    st.write("This is outside the container")
-
-    with col2:
-        st.header("Col 2")
-        if st.button('Room 2'):
-            st.write("This is inside the container")
-
-    # Sidebar layout
+    # SIDEBAR
     st.sidebar.header('Visualization Features')
     room_name = st.sidebar.selectbox('Select Room', room_names)
 
@@ -83,6 +75,22 @@ def main():
         st.write(f"Number of employees, size, window orientation ...")
         st.write(room_info.loc[room_name, ])
 
+    # OUTDOOR CLIMATE
+    st.subheader('Outdoor climate')
+    options_out = st.multiselect('Select',
+                                  ['Temperature', 'RH', 'Solar radiation', 'Degree-days'],
+                                  ['Temperature'])
+
+    if 'Degree-days' in options_out:
+        st.pyplot(plot_hdd(hdd))
+    elif 'Temperature' in options_out:
+        st.pyplot(plot_t_out(outdoor_data, 'Temperature'))
+    elif 'RH' in options_out:
+        st.pyplot(plot_t_out(outdoor_data, 'RH'))
+    elif 'Solar radiation' in options_out:
+        st.pyplot(plot_t_out(outdoor_data, 'Global radiation'))
+        st.pyplot(plot_t_out(outdoor_data, 'Diffuse radiation'))
+
     st.subheader('IAQ parameters')
     options_iaq = st.multiselect('Select',
                                  ['Temperature', 'RH', 'CO2 levels', 'VOC levels'],
@@ -99,10 +107,7 @@ def main():
                                   ['Window opening count', 'Room occupied time', 'Window open time'],
                                   ['Window opening count'])
 
-    st.subheader('Outdoor climate')
-    options_out = st.multiselect('Select',
-                                  ['Temperature', 'RH', 'Solar radiation'],
-                                  ['Temperature'])
+
 
     if st.button('Correlation Heatmap'):
         pass

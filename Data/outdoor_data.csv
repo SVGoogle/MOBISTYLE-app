@@ -1,4 +1,4 @@
-Timestamp,WEATHERS_TEMP,RH,Global radiation,Diffuse radiation
+Timestamp,Temperature,RH,Global radiation,Diffuse radiation
 2018-01-01 00:00:00,6.6,78.0,0.0,0.0
 2018-01-01 00:15:00,6.75,77.5,0.0,0.0
 2018-01-01 00:30:00,6.9,77.0,0.0,0.0

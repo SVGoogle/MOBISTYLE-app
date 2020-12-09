@@ -3,3 +3,4 @@ venv/
 settings.py
 notes.txt
 debug.log
+__pycache__/
