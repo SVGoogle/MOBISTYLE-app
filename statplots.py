@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import streamlit as st
 
 # Set bins and labels
 bins_TEMP, bins_RH = [-10000, 19, 20, 21, 23, 24, 25, 10000], [-10000, 20, 25, 30, 50, 60, 70, 10000]
@@ -37,6 +36,7 @@ def set_barh_text(df, ax):
             ax.text(xpos - val/2, rowNum, np.where((val >1.), f'{int(round(val))}', ''), color='white', ha='center', va='center', fontsize=10)
 
 
+# OUTDOOR CLIMATE
 def plot_hdd(df):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.7, 8.27), sharex=True)
     df.iloc[:12, :].plot(kind='barh', stacked=True, ax=ax1)
@@ -89,3 +89,105 @@ def plot_t_out(df, parameter='Temperature'):
     fig.tight_layout()
     return fig
 
+
+# ROOM VISUALIZATION
+BL_start, BL_end = '2018-02-1', '2019-02-1'
+MS_start, MS_end = '2019-02-1', '2020-02-1'
+
+# INDOOR CLIMATE
+def boxplot_monthly_temp(df, room_name):
+    fig, ax = plt.subplots(figsize=(11.7, 4))
+    data = (df.query(f'{room_name}_OCC > 0').loc[:, [f'{room_name}_TEMP']])
+    data.loc[BL_start: BL_end, 'Monitoring_Period'] = 'BASELINE'
+    data.loc[MS_start: MS_end, 'Monitoring_Period'] = 'MOBISTYLE'
+    sns.boxplot(data=data,
+                x=data.index.month, y=f'{room_name}_TEMP', hue='Monitoring_Period',
+                showfliers=False, palette=[color_BL, color_MS], ax=ax)
+
+    ax.axhline(y=25, xmax=0.35, color=(.3, .7, .4), linestyle='--', linewidth=1)
+    ax.axhline(y=21, xmax=0.35, color=(.3, .7, .4), linestyle='--', linewidth=1)
+    ax.text(x=-.5, y=25.1, s='Comfort cat. II+', color=(.3, .7, .4), size=12)
+    ax.text(x=-.5, y=21.1, s='Comfort cat. II-', color=(.3, .7, .4), size=12)
+    ax.axhline(y=27, xmin=0.35, xmax=0.75, color=(.3, .7, .4), linestyle='--', linewidth=1)
+    ax.axhline(y=23, xmin=0.35, xmax=0.75, color=(.3, .7, .4), linestyle='--', linewidth=1)
+    ax.axhline(y=25, xmin=0.75, color=(.3, .7, .4), linestyle='--', linewidth=1)
+    ax.axhline(y=21, xmin=0.75, color=(.3, .7, .4), linestyle='--', linewidth=1)
+
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    ax.legend(fontsize=14)
+    ax.xaxis.grid(True)
+    ax.set_title(f'Indoor air temperature (Room Occupied). Room: {room_name}', fontsize=14)
+    ax.set_ylabel('[$^o$C]', fontsize=14)
+    ax.set_xlabel('', fontsize=14)
+    ax.set_xticklabels(pd.date_range(start='2018-1-1', periods=12, freq='MS').strftime('%b'), rotation=0)
+    fig.tight_layout()
+    return fig
+
+
+def boxplot_monthly_rh(df, room_name):
+    fig, ax = plt.subplots(figsize=(11.7, 4))
+    data = (df.query(f'{room_name}_OCC > 0').loc[:, [f'{room_name}_INAP_humidity']])
+    data.loc[BL_start: BL_end, 'Monitoring_Period'] = 'BASELINE'
+    data.loc[MS_start: MS_end, 'Monitoring_Period'] = 'MOBISTYLE'
+    sns.boxplot(data=data,
+                x=data.index.month, y=f'{room_name}_INAP_humidity', hue='Monitoring_Period',
+                showfliers=False, palette=[color_BL, color_MS], ax=ax)
+
+    ax.axhline(y=60, color=(.3, .7, .4), linestyle='--', linewidth=1)
+    ax.axhline(y=30, color=(.3, .7, .4), linestyle='--', linewidth=1)
+    ax.text(x=-.5, y=61, s='Comfort cat. II+', color=(.3, .7, .4), size=12)
+    ax.text(x=-.5, y=31, s='Comfort cat. II-', color=(.3, .7, .4), size=12)
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    ax.legend(fontsize=14)
+    ax.xaxis.grid(True)
+    ax.set_title(f'Indoor air Relative Humidity levels (Room Occupied). Room: {room_name}', fontsize=14)
+    ax.set_ylabel('[%]', fontsize=14)
+    ax.set_xlabel('', fontsize=14)
+    ax.set_xticklabels(pd.date_range(start='2018-1-1', periods=12, freq='MS').strftime('%b'), rotation=0)
+    fig.tight_layout()
+    return fig
+
+
+def boxplot_monthly_co2(df, room_name):
+    fig, ax = plt.subplots(figsize=(11.7, 4))
+    data = (df.query(f'{room_name}_OCC > 0').loc[:, [f'{room_name}_INAP_co2']])
+    data.loc[BL_start: BL_end, 'Monitoring_Period'] = 'BASELINE'
+    data.loc[MS_start: MS_end, 'Monitoring_Period'] = 'MOBISTYLE'
+    sns.boxplot(data=data,
+                x=data.index.month, y=f'{room_name}_INAP_co2', hue='Monitoring_Period',
+                showfliers=False, palette=[color_BL, color_MS], ax=ax)
+    ax.axhline(y=1200, color=(.8, .07, .25), linestyle='--', linewidth=1)
+    ax.text(x=-.5, y=1250, s='Comfort cat. IV+', color=(.8, .07, .25), size=12)
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    ax.legend(fontsize=14)
+    ax.xaxis.grid(True)
+    ax.set_title(f'Indoor air CO2 levels (Room Occupied). Room: {room_name}', fontsize=14)
+    ax.set_ylabel('[ppm]', fontsize=14)
+    ax.set_xlabel('', fontsize=14)
+    ax.set_xticklabels(pd.date_range(start='2018-1-1', periods=12, freq='MS').strftime('%b'), rotation=0)
+    fig.tight_layout()
+    return fig
+
+
+def boxplot_monthly_voc(df, room_name):
+    fig, ax = plt.subplots(figsize=(11.7, 4))
+    data = (df.query(f'{room_name}_OCC > 0') .loc[:, [f'{room_name}_INAP_voc']])
+    data.loc[BL_start: BL_end, 'Monitoring_Period'] = 'BASELINE'
+    data.loc[MS_start: MS_end, 'Monitoring_Period'] = 'MOBISTYLE'
+    sns.boxplot(data=data,
+                x=data.index.month, y=f'{room_name}_INAP_voc', hue='Monitoring_Period',
+                showfliers=False, palette=[color_BL, color_MS], ax=ax)
+    ax.axhline(y=100, color=(.8, .07, .25), linestyle='--', linewidth=1)
+    ax.text(x=-.5, y=105, s='Comfort cat. IV+', color=(.8, .07, .25), size=12)
+    ax.tick_params(axis='both', which='major', labelsize=14)
+    ax.legend(fontsize=14)
+    ax.xaxis.grid(True)
+    ax.set_title(f'Indoor air VOC levels (Room Occupied). Room: {room_name}', fontsize=14)
+    ax.set_ylabel('[ppb]', fontsize=14)
+    ax.set_xlabel('', fontsize=14)
+    ax.set_xticklabels(pd.date_range(start='2018-1-1', periods=12, freq='MS').strftime('%b'), rotation=0)
+    fig.tight_layout()
+    return fig
+
+
+# WINDOW OPENINGS
