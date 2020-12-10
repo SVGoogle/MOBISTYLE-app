@@ -93,9 +93,12 @@ def main():
         """)
         st.table(room_info.loc[room_name, ])
 
-    # Load DatFrame for selected room
-    df = get_data()[room_dct[room_name]]
-    df = df.rename(columns={'HEAT_COOL': 'Season'})
+    # Load DataFrame for selected room
+    data = get_data()[room_dct[room_name]]
+    data = data.rename(columns={'HEAT_COOL': 'Season'})
+
+    # Join on Index with outdoor data
+    df = data.join(outdoor_data.iloc[:, :-1])
 
     #st.table(df.astype('object'))
 
@@ -111,10 +114,29 @@ def main():
         st.pyplot(boxplot_monthly_voc(df, room_dct[room_name]))
         st.write('Comfort category IV+ corresponds to *VOC* concentration levels above *100 ppb*.')
 
+    st.subheader('Outdoor vs Indoor Air Temperature')
+
+    def hexbin(x, y, color, **kwargs):
+        """Function to plot Hexbin using FacetGrid."""
+        cmap = sns.light_palette(color, as_cmap=True)
+        plt.hexbin(x, y, gridsize=20, cmap=cmap, **kwargs)
+
+    # Plot by Monitoring period
+    with sns.axes_style("white"):
+        g = sns.FacetGrid(df, hue='Monitoring_Period', col='Monitoring_Period', height=4)
+        (g.map(hexbin, f'{room_dct[room_name]}_TEMP', 'Temperature', extent=[15, 30, -5, 35])
+         .set_axis_labels('Office Temperature ($^o$C)', 'Outdoor Temperature ($^o$C)'))
+        st.pyplot(g)
+    
+    # Plot by Monitoring period and Season
+    if st.checkbox('Seasonal comparison'):
+        with sns.axes_style("dark"):
+            g = sns.FacetGrid(df, hue='Monitoring_Period', col='Monitoring_Period', row='Season', height=4)
+            (g.map(hexbin, f'{room_dct[room_name]}_TEMP', 'Temperature', extent=[15, 30, -5, 35])
+             .set_axis_labels('Office Temperature ($^o$C)', 'Outdoor Temperature ($^o$C)'))
+            st.pyplot(g)
+
     st.subheader('Thermal Comfort categories')
-
-    #st.pyplot(plot_comfort_cat_temp(df, room_dct[room_name]))
-
     g = sns.catplot(x='Category_TEMP', hue='Monitoring_Period', col='Season',
                     data=df, kind='count', order=labels_T_RH, legend=False, legend_out=True,
                     height=3.5, aspect=1.5)

@@ -93,6 +93,7 @@ def plot_t_out(df, parameter='Temperature'):
 BL_start, BL_end = '2018-02-1', '2019-02-1'
 MS_start, MS_end = '2019-02-1', '2020-02-1'
 
+
 # INDOOR CLIMATE
 def boxplot_monthly_temp(df, room_name):
     fig, ax = plt.subplots(figsize=(11.7, 4))
@@ -206,6 +207,7 @@ def stats_category(df, cat_name):
     df_cat.loc[cat_name, 'Missing data'] = df[cat_name].isna().sum() * 100 / len(df[cat_name])
 
     return df_cat.fillna(0)
+
 
 """
 def plot_comfort_cat_temp(df, room_name):
