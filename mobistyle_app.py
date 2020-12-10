@@ -95,6 +95,7 @@ def main():
 
     # Load DatFrame for selected room
     df = get_data()[room_dct[room_name]]
+    df = df.rename(columns={'HEAT_COOL': 'Season'})
 
     #st.table(df.astype('object'))
 
@@ -111,6 +112,15 @@ def main():
         st.write('Comfort category IV+ corresponds to *VOC* concentration levels above *100 ppb*.')
 
     st.subheader('Thermal Comfort categories')
+
+    #st.pyplot(plot_comfort_cat_temp(df, room_dct[room_name]))
+
+    g = sns.catplot(x='Category_TEMP', hue='Monitoring_Period', col='Season',
+                    data=df, kind='count', order=labels_T_RH, legend=False, legend_out=True,
+                    height=3.5, aspect=1.5)
+    (g.set_axis_labels("Comfort category", "Count")
+     .add_legend(loc='upper right', fontsize=14))
+    st.pyplot(g)
 
     st.subheader('User behavior')
     option_user = st.selectbox('', options=['Window opening count', 'Room occupied time', 'Window open time'])
