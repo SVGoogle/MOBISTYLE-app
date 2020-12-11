@@ -44,6 +44,11 @@ def main():
         }
         data_dct = {room:  pd.read_csv(
             f'./Data/Data_{room}.csv',
+            usecols=list(
+                [f'{room}_OCC', f'{room}_WINDOW', f'{room}_WINDOW_Openings', f'{room}_INAP_co2',
+                 f'{room}_INAP_humidity', f'{room}_INAP_voc', f'{room}_TEMP', 'Monitoring_Period', 'HEAT_COOL',
+                 'Category_TEMP', 'Category_RH', 'Category_CO2', 'Category_VOC', 'Timestamp'
+                 ]),
             dtype=dtypes,
             parse_dates=True,
             index_col='Timestamp') for room in room_lst}
@@ -57,7 +62,6 @@ def main():
     st.sidebar.header('Visualization Features')
     room_name = st.sidebar.selectbox('Select Room', room_names)
 
-    #duration = st.sidebar.select_slider('Duration', options=['15 min', '1 month', '1 year'])
 
     about_project = st.sidebar.beta_expander('About project')
     about_project.write("""
@@ -83,8 +87,7 @@ def main():
             st.pyplot(plot_t_out(outdoor_data, 'Diffuse radiation'))
 
     # ROOM VISUALIZATION
-    st.header('IAQ parameters')
-    with st.beta_expander(f'Description - {room_name}'):
+    with st.beta_expander(f'{room_name} description'):
         st.write("""         
         Dates for giving the MOBISTYLE mobile app to office employees, number of employees, office space area and type,
         window orientation are described in the table below. LED sensors are mounted on the wall. 
@@ -93,12 +96,17 @@ def main():
         """)
         st.table(room_info.loc[room_name, ])
 
+    st.subheader('IAQ parameters')
+
     # Load DataFrame for selected room
     data = get_data()[room_dct[room_name]]
     data = data.rename(columns={'HEAT_COOL': 'Season'})
-
     # Join on Index with outdoor data
     df = data.join(outdoor_data.iloc[:, :-1])
+    # Daily data
+    df_daily = (df.groupby(['Monitoring_Period', 'Season'])
+                  .resample('D').mean().dropna(how='all').reset_index().set_index('Timestamp'))
+    print(df_daily.info())
 
     #st.table(df.astype('object'))
 
@@ -114,7 +122,7 @@ def main():
         st.pyplot(boxplot_monthly_voc(df, room_dct[room_name]))
         st.write('Comfort category IV+ corresponds to *VOC* concentration levels above *100 ppb*.')
 
-    st.subheader('Outdoor vs Indoor Air Temperature')
+    st.subheader('Outdoor and indoor air temperature')
 
     def hexbin(x, y, color, **kwargs):
         """Function to plot Hexbin using FacetGrid."""
@@ -127,10 +135,10 @@ def main():
         (g.map(hexbin, f'{room_dct[room_name]}_TEMP', 'Temperature', extent=[15, 30, -5, 35])
          .set_axis_labels('Office Temperature ($^o$C)', 'Outdoor Temperature ($^o$C)'))
         st.pyplot(g)
-    
+
     # Plot by Monitoring period and Season
     if st.checkbox('Seasonal comparison'):
-        with sns.axes_style("dark"):
+        with sns.axes_style("white"):
             g = sns.FacetGrid(df, hue='Monitoring_Period', col='Monitoring_Period', row='Season', height=4)
             (g.map(hexbin, f'{room_dct[room_name]}_TEMP', 'Temperature', extent=[15, 30, -5, 35])
              .set_axis_labels('Office Temperature ($^o$C)', 'Outdoor Temperature ($^o$C)'))
