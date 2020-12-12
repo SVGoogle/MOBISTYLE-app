@@ -24,6 +24,7 @@ def main():
     hdd = pd.read_excel('./Data/HDDs_SL.xlsx', index_col='Timestamp', parse_dates=True,
                         usecols=[0, 1, 2], nrows=25)
     outdoor_data = pd.read_csv('./Data/outdoor_data.csv', parse_dates=True, index_col='Timestamp')
+    outdoor_data = outdoor_data.rename(columns={'RH': 'Outdoor RH', 'Temperature': 'Outdoor Temperature'})
     BL_start, BL_end = '2018-02-1', '2019-02-1'
     MS_start, MS_end = '2019-02-1', '2020-02-1'
     outdoor_data.loc[BL_start: BL_end, 'Monitoring_Period'] = 'BASELINE'
@@ -51,7 +52,16 @@ def main():
                  ]),
             dtype=dtypes,
             parse_dates=True,
-            index_col='Timestamp') for room in room_lst}
+            index_col='Timestamp').rename(
+            columns={'HEAT_COOL': 'Season',
+                     f'{room}_OCC': 'Room Status',
+                     f'{room}_WINDOW': 'Window State',
+                     f'{room}_WINDOW_Openings': 'Window State Change',
+                     f'{room}_INAP_co2': 'CO2',
+                     f'{room}_INAP_humidity': 'RH',
+                     f'{room}_INAP_voc': 'VOC',
+                     f'{room}_TEMP': 'Temperature',
+        }) for room in room_lst}
         return data_dct
 
     with st.beta_expander("Building description"):
@@ -61,7 +71,6 @@ def main():
     # SIDEBAR
     st.sidebar.header('Visualization Features')
     room_name = st.sidebar.selectbox('Select Room', room_names)
-
 
     about_project = st.sidebar.beta_expander('About project')
     about_project.write("""
@@ -79,9 +88,9 @@ def main():
         if 'Degree-days' in option_out:
             st.pyplot(plot_hdd(hdd))
         elif 'Temperature' in option_out:
-            st.pyplot(plot_t_out(outdoor_data, 'Temperature'))
+            st.pyplot(plot_t_out(outdoor_data, 'Outdoor Temperature'))
         elif 'RH' in option_out:
-            st.pyplot(plot_t_out(outdoor_data, 'RH'))
+            st.pyplot(plot_t_out(outdoor_data, 'Outdoor RH'))
         elif 'Solar radiation' in option_out:
             st.pyplot(plot_t_out(outdoor_data, 'Global radiation'))
             st.pyplot(plot_t_out(outdoor_data, 'Diffuse radiation'))
@@ -100,7 +109,8 @@ def main():
 
     # Load DataFrame for selected room
     data = get_data()[room_dct[room_name]]
-    data = data.rename(columns={'HEAT_COOL': 'Season'})
+    print(data.columns)
+    print(outdoor_data.columns)
     # Join on Index with outdoor data
     df = data.join(outdoor_data.iloc[:, :-1])
     # Daily data
@@ -112,14 +122,14 @@ def main():
 
     option_iaq = st.selectbox('', options=['Temperature', 'RH', 'CO2 levels', 'VOC levels'])
     if option_iaq == 'Temperature':
-        st.pyplot(boxplot_monthly_temp(df, room_dct[room_name]))
+        st.pyplot(boxplot_monthly_temp(df, room_name))
     if option_iaq == 'RH':
-        st.pyplot(boxplot_monthly_rh(df, room_dct[room_name]))
+        st.pyplot(boxplot_monthly_rh(df, room_name))
     if option_iaq == 'CO2 levels':
-        st.pyplot(boxplot_monthly_co2(df, room_dct[room_name]))
+        st.pyplot(boxplot_monthly_co2(df, room_name))
         st.write('Comfort category IV+ corresponds to $CO_2$ concentration levels above *1200 ppm*.')
     if option_iaq == 'VOC levels':
-        st.pyplot(boxplot_monthly_voc(df, room_dct[room_name]))
+        st.pyplot(boxplot_monthly_voc(df, room_name))
         st.write('Comfort category IV+ corresponds to *VOC* concentration levels above *100 ppb*.')
 
     st.subheader('Outdoor and indoor air temperature')
@@ -132,7 +142,7 @@ def main():
     # Plot by Monitoring period
     with sns.axes_style("white"):
         g = sns.FacetGrid(df, hue='Monitoring_Period', col='Monitoring_Period', height=4)
-        (g.map(hexbin, f'{room_dct[room_name]}_TEMP', 'Temperature', extent=[15, 30, -5, 35])
+        (g.map(hexbin, 'Temperature', 'Outdoor Temperature', extent=[15, 30, -5, 35])
          .set_axis_labels('Office Temperature ($^o$C)', 'Outdoor Temperature ($^o$C)'))
         st.pyplot(g)
 
@@ -140,7 +150,7 @@ def main():
     if st.checkbox('Seasonal comparison'):
         with sns.axes_style("white"):
             g = sns.FacetGrid(df, hue='Monitoring_Period', col='Monitoring_Period', row='Season', height=4)
-            (g.map(hexbin, f'{room_dct[room_name]}_TEMP', 'Temperature', extent=[15, 30, -5, 35])
+            (g.map(hexbin, 'Temperature', 'Outdoor Temperature', extent=[15, 30, -5, 35])
              .set_axis_labels('Office Temperature ($^o$C)', 'Outdoor Temperature ($^o$C)'))
             st.pyplot(g)
 

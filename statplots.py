@@ -40,7 +40,7 @@ def set_barh_text(df, ax):
 def plot_hdd(df):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.7, 8.27), sharex=True)
     df.iloc[:12, :].plot(kind='barh', stacked=True, ax=ax1)
-    df.iloc[12:-1, :].plot(kind='barh', stacked=True, ax=ax2)
+    df.iloc[12:-1, :].plot(kind='barh', stacked=True, ax=ax2, c=[color_MS, 'salmon'])
     set_barh_text(df.iloc[:12, :], ax1)
     set_barh_text(df.iloc[12:-1, :], ax2)
 
@@ -65,11 +65,11 @@ def plot_hdd(df):
     return fig
 
 
-def plot_t_out(df, parameter='Temperature'):
+def plot_t_out(df, parameter='Outdoor Temperature'):
     fig, ax = plt.subplots(figsize=(11.7, 4))
-    if parameter == 'Temperature':
+    if parameter == 'Outdoor Temperature':
         unit = '[$^o$C]'
-    elif parameter == 'RH':
+    elif parameter == 'Outdoor RH':
         unit = '[%]'
     elif parameter == 'Global radiation' or 'Diffuse radiation':
         unit = '[W/m2]'
@@ -97,11 +97,11 @@ MS_start, MS_end = '2019-02-1', '2020-02-1'
 # INDOOR CLIMATE
 def boxplot_monthly_temp(df, room_name):
     fig, ax = plt.subplots(figsize=(11.7, 4))
-    data = (df.query(f'{room_name}_OCC > 0').loc[:, [f'{room_name}_TEMP']])
+    data = (df.query('`Room Status` > 0').loc[:, ['Temperature']])
     data.loc[BL_start: BL_end, 'Monitoring_Period'] = 'BASELINE'
     data.loc[MS_start: MS_end, 'Monitoring_Period'] = 'MOBISTYLE'
     sns.boxplot(data=data,
-                x=data.index.month, y=f'{room_name}_TEMP', hue='Monitoring_Period',
+                x=data.index.month, y='Temperature', hue='Monitoring_Period',
                 showfliers=False, palette=[color_BL, color_MS], ax=ax)
 
     ax.axhline(y=25, xmax=0.35, color=(.3, .7, .4), linestyle='--', linewidth=1)
@@ -116,7 +116,7 @@ def boxplot_monthly_temp(df, room_name):
     ax.tick_params(axis='both', which='major', labelsize=14)
     ax.legend(fontsize=14)
     ax.xaxis.grid(True)
-    ax.set_title(f'Indoor air temperature (Room Occupied). Room: {room_name}', fontsize=14)
+    ax.set_title(f'Indoor air temperature (Room Occupied). {room_name}', fontsize=14)
     ax.set_ylabel('[$^o$C]', fontsize=14)
     ax.set_xlabel('', fontsize=14)
     ax.set_xticklabels(pd.date_range(start='2018-1-1', periods=12, freq='MS').strftime('%b'), rotation=0)
@@ -126,11 +126,11 @@ def boxplot_monthly_temp(df, room_name):
 
 def boxplot_monthly_rh(df, room_name):
     fig, ax = plt.subplots(figsize=(11.7, 4))
-    data = (df.query(f'{room_name}_OCC > 0').loc[:, [f'{room_name}_INAP_humidity']])
+    data = (df.query('`Room Status` > 0').loc[:, ['RH']])
     data.loc[BL_start: BL_end, 'Monitoring_Period'] = 'BASELINE'
     data.loc[MS_start: MS_end, 'Monitoring_Period'] = 'MOBISTYLE'
     sns.boxplot(data=data,
-                x=data.index.month, y=f'{room_name}_INAP_humidity', hue='Monitoring_Period',
+                x=data.index.month, y='RH', hue='Monitoring_Period',
                 showfliers=False, palette=[color_BL, color_MS], ax=ax)
 
     ax.axhline(y=60, color=(.3, .7, .4), linestyle='--', linewidth=1)
@@ -140,7 +140,7 @@ def boxplot_monthly_rh(df, room_name):
     ax.tick_params(axis='both', which='major', labelsize=14)
     ax.legend(fontsize=14)
     ax.xaxis.grid(True)
-    ax.set_title(f'Indoor air Relative Humidity levels (Room Occupied). Room: {room_name}', fontsize=14)
+    ax.set_title(f'Indoor air Relative Humidity levels (Room Occupied). {room_name}', fontsize=14)
     ax.set_ylabel('[%]', fontsize=14)
     ax.set_xlabel('', fontsize=14)
     ax.set_xticklabels(pd.date_range(start='2018-1-1', periods=12, freq='MS').strftime('%b'), rotation=0)
@@ -150,18 +150,18 @@ def boxplot_monthly_rh(df, room_name):
 
 def boxplot_monthly_co2(df, room_name):
     fig, ax = plt.subplots(figsize=(11.7, 4))
-    data = (df.query(f'{room_name}_OCC > 0').loc[:, [f'{room_name}_INAP_co2']])
+    data = (df.query('`Room Status` > 0').loc[:, ['CO2']])
     data.loc[BL_start: BL_end, 'Monitoring_Period'] = 'BASELINE'
     data.loc[MS_start: MS_end, 'Monitoring_Period'] = 'MOBISTYLE'
     sns.boxplot(data=data,
-                x=data.index.month, y=f'{room_name}_INAP_co2', hue='Monitoring_Period',
+                x=data.index.month, y='CO2', hue='Monitoring_Period',
                 showfliers=False, palette=[color_BL, color_MS], ax=ax)
     ax.axhline(y=1200, color=(.8, .07, .25), linestyle='--', linewidth=1)
     ax.text(x=-.5, y=1250, s='Comfort cat. IV+', color=(.8, .07, .25), size=12)
     ax.tick_params(axis='both', which='major', labelsize=14)
     ax.legend(fontsize=14)
     ax.xaxis.grid(True)
-    ax.set_title(f'Indoor air CO2 levels (Room Occupied). Room: {room_name}', fontsize=14)
+    ax.set_title(f'Indoor air CO2 levels (Room Occupied). {room_name}', fontsize=14)
     ax.set_ylabel('[ppm]', fontsize=14)
     ax.set_xlabel('', fontsize=14)
     ax.set_xticklabels(pd.date_range(start='2018-1-1', periods=12, freq='MS').strftime('%b'), rotation=0)
@@ -171,18 +171,18 @@ def boxplot_monthly_co2(df, room_name):
 
 def boxplot_monthly_voc(df, room_name):
     fig, ax = plt.subplots(figsize=(11.7, 4))
-    data = (df.query(f'{room_name}_OCC > 0') .loc[:, [f'{room_name}_INAP_voc']])
+    data = (df.query('`Room Status` > 0') .loc[:, ['VOC']])
     data.loc[BL_start: BL_end, 'Monitoring_Period'] = 'BASELINE'
     data.loc[MS_start: MS_end, 'Monitoring_Period'] = 'MOBISTYLE'
     sns.boxplot(data=data,
-                x=data.index.month, y=f'{room_name}_INAP_voc', hue='Monitoring_Period',
+                x=data.index.month, y='VOC', hue='Monitoring_Period',
                 showfliers=False, palette=[color_BL, color_MS], ax=ax)
     ax.axhline(y=100, color=(.8, .07, .25), linestyle='--', linewidth=1)
     ax.text(x=-.5, y=105, s='Comfort cat. IV+', color=(.8, .07, .25), size=12)
     ax.tick_params(axis='both', which='major', labelsize=14)
     ax.legend(fontsize=14)
     ax.xaxis.grid(True)
-    ax.set_title(f'Indoor air VOC levels (Room Occupied). Room: {room_name}', fontsize=14)
+    ax.set_title(f'Indoor air VOC levels (Room Occupied). {room_name}', fontsize=14)
     ax.set_ylabel('[ppb]', fontsize=14)
     ax.set_xlabel('', fontsize=14)
     ax.set_xticklabels(pd.date_range(start='2018-1-1', periods=12, freq='MS').strftime('%b'), rotation=0)
