@@ -171,7 +171,7 @@ def boxplot_monthly_co2(df, room_name):
 
 def boxplot_monthly_voc(df, room_name):
     fig, ax = plt.subplots(figsize=(11.7, 4))
-    data = (df.query('`Room Status` > 0') .loc[:, ['VOC']])
+    data = (df.query('`Room Status` > 0').loc[:, ['VOC']])
     data.loc[BL_start: BL_end, 'Monitoring_Period'] = 'BASELINE'
     data.loc[MS_start: MS_end, 'Monitoring_Period'] = 'MOBISTYLE'
     sns.boxplot(data=data,
@@ -209,27 +209,31 @@ def stats_category(df, cat_name):
     return df_cat.fillna(0)
 
 
-"""
-def plot_comfort_cat_temp(df, room_name):
+def plot_comfort_cat_temp_rh(df, room_name, parameter):
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.7, 4), sharey=True)
-    df_cat_T = (df
-                .groupby(['Monitoring_Period', 'Season']).apply(stats_category, 'Category_TEMP')
+    if parameter == 'Temperature':
+        category_name = 'Category_TEMP'
+    else:
+        category_name = 'Category_RH'
+
+    df_cat = (df.query('`Room Status` > 0')
+                .groupby(['Monitoring_Period', 'Season']).apply(stats_category, category_name)
                 .reset_index().set_index('Season'))
-    BL_T = df_cat_T.query('Monitoring_Period == "BASELINE"').loc[:, labels_T_RH + ['Missing data']]
-    MS_T = df_cat_T.query('Monitoring_Period == "MOBISTYLE"').loc[:, labels_T_RH + ['Missing data']]
+    BL_T = df_cat.query('Monitoring_Period == "BASELINE"').loc[:, labels_T_RH + ['Missing data']]
+    MS_T = df_cat.query('Monitoring_Period == "MOBISTYLE"').loc[:, labels_T_RH + ['Missing data']]
     BL_T.plot(kind='barh', stacked=True, color=cmap_T_RH, legend='', ax=ax1)
     MS_T.plot(kind='barh', stacked=True, color=cmap_T_RH, legend='', ax=ax2)
-        # Add percentage tect to bars
+    # Add percentage tect to bars
     set_barh_text(BL_T, ax1)
     set_barh_text(MS_T, ax2)
     # Format Axes and Figure
     for ax in (ax1, ax2):
-        ax.set(xlim=(0,100), xticklabels=[0, 20, 40, 60, 80, '100%'], ylabel='')
+        ax.set(xlim=(0, 100), xticklabels=[0, 20, 40, 60, 80, '100%'], ylabel='')
         ax.tick_params(axis='both', which='major', labelsize=14)
         ax.legend('')
     ax1.set_title('BASELINE')
     ax2.set_title('MOBISTYLE')
-    plt.suptitle(f'Time Distribution (%) in Comfort Categories. Temperature for {room_name}', fontsize=14)
+    plt.suptitle(f'Time Distribution (%) in Comfort Categories. {parameter} for {room_name}', fontsize=14)
     fig.legend(labels_T_RH + ['Missing data'], loc='lower center', bbox_to_anchor=(0.5, 0.0), ncol=8, fontsize=12)
     fig.tight_layout()
     fig.subplots_adjust(top=0.85, bottom=0.2)
@@ -239,12 +243,12 @@ def plot_comfort_cat_temp(df, room_name):
 # WINDOW OPENINGS
 def plot_monthly_window(df, room_name):
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11.7, 8), sharex=True)
-    df_OP = df[[f'{room_name}_WINDOW_Openings']].resample('MS').apply(lambda x: x.isin([1]).sum())
-    df_OP['Window_State'] = df[[f'{room_name}_WINDOW']].resample('MS').mean() * 100
+    df_OP = df[['Window State Change']].resample('MS').apply(lambda x: x.isin([1]).sum())
+    df_OP['Window_State'] = df[['Window State']].resample('MS').mean() * 100
     df_OP.loc[:'2019-02-1', 'Monitoring_Period'] = 'BASELINE'
     df_OP.loc['2019-02-1':, 'Monitoring_Period'] = 'MOBISTYLE'
 
-    sns.barplot(data=df_OP, x=df_OP.index.month, y=f'{room_name}_WINDOW_Openings', hue='Monitoring_Period',
+    sns.barplot(data=df_OP, x=df_OP.index.month, y='Window State Change', hue='Monitoring_Period',
                 palette=pallete, ax=ax1)
     sns.barplot(data=df_OP, x=df_OP.index.month, y='Window_State', hue='Monitoring_Period',
                 palette=pallete, ax=ax2)
@@ -252,9 +256,10 @@ def plot_monthly_window(df, room_name):
     ax2.set(ylabel='Time open (pct)', xlabel='')
     ax2.set_xticklabels(pd.date_range(start='2018-1-1', periods=12, freq='MS').strftime('%b'), rotation=0)
     [ax.legend(loc='upper right', fontsize=14) for ax in (ax1, ax2)]
+    plt.suptitle(f'Window opening data. {room_name}', fontsize=14)
     plt.tight_layout()
     return fig
-"""
+
 
 
 

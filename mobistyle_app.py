@@ -25,8 +25,6 @@ def main():
                         usecols=[0, 1, 2], nrows=25)
     outdoor_data = pd.read_csv('./Data/outdoor_data.csv', parse_dates=True, index_col='Timestamp')
     outdoor_data = outdoor_data.rename(columns={'RH': 'Outdoor RH', 'Temperature': 'Outdoor Temperature'})
-    BL_start, BL_end = '2018-02-1', '2019-02-1'
-    MS_start, MS_end = '2019-02-1', '2020-02-1'
     outdoor_data.loc[BL_start: BL_end, 'Monitoring_Period'] = 'BASELINE'
     outdoor_data.loc[MS_start: MS_end, 'Monitoring_Period'] = 'MOBISTYLE'
 
@@ -61,7 +59,7 @@ def main():
                      f'{room}_INAP_humidity': 'RH',
                      f'{room}_INAP_voc': 'VOC',
                      f'{room}_TEMP': 'Temperature',
-        }) for room in room_lst}
+                     }) for room in room_lst}
         return data_dct
 
     with st.beta_expander("Building description"):
@@ -109,16 +107,12 @@ def main():
 
     # Load DataFrame for selected room
     data = get_data()[room_dct[room_name]]
-    print(data.columns)
-    print(outdoor_data.columns)
+
     # Join on Index with outdoor data
     df = data.join(outdoor_data.iloc[:, :-1])
     # Daily data
     df_daily = (df.groupby(['Monitoring_Period', 'Season'])
                   .resample('D').mean().dropna(how='all').reset_index().set_index('Timestamp'))
-    print(df_daily.info())
-
-    #st.table(df.astype('object'))
 
     option_iaq = st.selectbox('', options=['Temperature', 'RH', 'CO2 levels', 'VOC levels'])
     if option_iaq == 'Temperature':
@@ -154,16 +148,21 @@ def main():
              .set_axis_labels('Office Temperature ($^o$C)', 'Outdoor Temperature ($^o$C)'))
             st.pyplot(g)
 
-    st.subheader('Thermal Comfort categories')
+    st.subheader('Thermal comfort categories')
+
+    st.pyplot(plot_comfort_cat_temp_rh(df, room_name, 'Temperature'))
+    st.pyplot(plot_comfort_cat_temp_rh(df, room_name, 'RH'))
+
     g = sns.catplot(x='Category_TEMP', hue='Monitoring_Period', col='Season',
                     data=df, kind='count', order=labels_T_RH, legend=False, legend_out=True,
                     height=3.5, aspect=1.5)
     (g.set_axis_labels("Comfort category", "Count")
      .add_legend(loc='upper right', fontsize=14))
-    st.pyplot(g)
+    # st.pyplot(g)
 
-    st.subheader('User behavior')
-    option_user = st.selectbox('', options=['Window opening count', 'Room occupied time', 'Window open time'])
+    st.subheader('Open window detection')
+    # option_user = st.selectbox('', options=['Window opening count', 'Room occupied time', 'Window open time'])
+    st.pyplot(plot_monthly_window(df, room_name))
 
     if st.button('Correlation Heatmap'):
         pass
