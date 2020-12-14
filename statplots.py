@@ -11,7 +11,8 @@ labels_T_RH = ['Cat -IV', 'Cat -III', 'Cat -II', 'Cat I', 'Cat +II', 'Cat +III',
 labels_CO2_VOC = ['Cat I', 'Cat II', 'Cat III', 'Cat IV']
 
 # RGB codes for Comfort category colors
-cmap_T_RH = [(0, .33, .82), (0, .7, .82), (.5, .95, .75), (.3, .7, .4), (.6, .8, .4), (.95, .39, .4), (.8, .07, .25), 'lightgrey']
+cmap_T_RH = [(0, .33, .82), (0, .7, .82), (.5, .95, .75), (.3, .7, .4),
+             (.6, .8, .4), (.95, .39, .4), (.8, .07, .25), 'lightgrey']
 cmap_CO2_VOC = [(.3, .7, .4), (.6, .8, .4), (.95, .39, .4), (.8, .07, .25), 'lightgrey']
 
 # Colors for plots
@@ -33,7 +34,8 @@ def set_barh_text(df, ax):
         xpos = 0
         for val in row:
             xpos += val
-            ax.text(xpos - val/2, rowNum, np.where((val >1.), f'{int(round(val))}', ''), color='white', ha='center', va='center', fontsize=10)
+            ax.text(xpos - val/2, rowNum, np.where((val > 1.), f'{int(round(val))}', ''),
+                    color='white', ha='center', va='center', fontsize=10)
 
 
 # OUTDOOR CLIMATE
@@ -215,7 +217,6 @@ def plot_comfort_cat_temp_rh(df, room_name, parameter):
         category_name = 'Category_TEMP'
     else:
         category_name = 'Category_RH'
-
     df_cat = (df.query('`Room Status` > 0')
                 .groupby(['Monitoring_Period', 'Season']).apply(stats_category, category_name)
                 .reset_index().set_index('Season'))
@@ -223,10 +224,8 @@ def plot_comfort_cat_temp_rh(df, room_name, parameter):
     MS_T = df_cat.query('Monitoring_Period == "MOBISTYLE"').loc[:, labels_T_RH + ['Missing data']]
     BL_T.plot(kind='barh', stacked=True, color=cmap_T_RH, legend='', ax=ax1)
     MS_T.plot(kind='barh', stacked=True, color=cmap_T_RH, legend='', ax=ax2)
-    # Add percentage tect to bars
     set_barh_text(BL_T, ax1)
     set_barh_text(MS_T, ax2)
-    # Format Axes and Figure
     for ax in (ax1, ax2):
         ax.set(xlim=(0, 100), xticklabels=[0, 20, 40, 60, 80, '100%'], ylabel='')
         ax.tick_params(axis='both', which='major', labelsize=14)
@@ -235,6 +234,36 @@ def plot_comfort_cat_temp_rh(df, room_name, parameter):
     ax2.set_title('MOBISTYLE')
     plt.suptitle(f'Time Distribution (%) in Comfort Categories. {parameter} for {room_name}', fontsize=14)
     fig.legend(labels_T_RH + ['Missing data'], loc='lower center', bbox_to_anchor=(0.5, 0.0), ncol=8, fontsize=12)
+    fig.tight_layout()
+    fig.subplots_adjust(top=0.85, bottom=0.2)
+    return fig
+
+
+def plot_comfort_cat_co2_voc(df, room_name, parameter):
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.7, 4), sharey=True)
+    if parameter == 'CO2':
+        category_name = 'Category_CO2'
+    else:
+        category_name = 'Category_VOC'
+    df_cat = (df.query('`Room Status` > 0')
+                .groupby(['Monitoring_Period', 'Season']).apply(stats_category, category_name)
+                .reset_index().set_index('Season')
+              )
+    BL_T = df_cat.query('Monitoring_Period == "BASELINE"').loc[:, labels_CO2_VOC + ['Missing data']]
+    MS_T = df_cat.query('Monitoring_Period == "MOBISTYLE"').loc[:, labels_CO2_VOC + ['Missing data']]
+    BL_T.plot(kind='barh', stacked=True, color=cmap_CO2_VOC, legend='', ax=ax1)
+    MS_T.plot(kind='barh', stacked=True, color=cmap_CO2_VOC, legend='', ax=ax2)
+    set_barh_text(BL_T, ax1)
+    set_barh_text(MS_T, ax2)
+
+    for ax in (ax1, ax2):
+        ax.set(xlim=(0, 100), xticklabels=[0, 20, 40, 60, 80, '100%'], ylabel='')
+        ax.tick_params(axis='both', which='major', labelsize=14)
+        ax.legend('')
+    ax1.set_title('BASELINE')
+    ax2.set_title('MOBISTYLE')
+    plt.suptitle(f'Time Distribution (%) in Comfort Categories. {parameter} in {room_name}', fontsize=14)
+    fig.legend(labels_CO2_VOC + ['Missing data'], loc='lower center', bbox_to_anchor=(0.5, 0.0), ncol=8, fontsize=12)
     fig.tight_layout()
     fig.subplots_adjust(top=0.85, bottom=0.2)
     return fig
@@ -260,6 +289,47 @@ def plot_monthly_window(df, room_name):
     plt.tight_layout()
     return fig
 
+
+def plot_window_temp_out(df, room_name):
+    df = df.query('`Room Status` > 0')
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.7, 4), sharey=True, sharex=True)
+    for period, ax in zip(['BASELINE', 'MOBISTYLE'], (ax1, ax2)):
+        mask = (df['Monitoring_Period'] == period)
+        x, y = df.loc[mask, 'Temperature'], df.loc[mask, 'Outdoor Temperature']
+        z = df.loc[mask, 'Window State'] * 100
+        sct = ax.scatter(x, y, c=z, cmap='GnBu')
+        ax.set_title(period, size=14)
+        ax.set(xlabel='Office Temperature ($^o$C)')
+
+    ax1.set_ylabel('Outdoor Temperature ($^o$C)')
+    cbar = plt.colorbar(sct)
+    cbar.ax.set_ylabel('Window open (pct)', size=12, rotation=90, va='top')
+    cbar.ax.yaxis.set_ticks_position('right')
+    plt.suptitle(f'Window open state, Indoor and Outdoor Temperature. {room_name}', size=14)
+    plt.tight_layout()
+    fig.subplots_adjust(top=0.8)
+    return fig
+
+
+# CORRELATION MATRIX
+def plot_corr_matrix(df, room_name, period):
+    mask_period = (df['Monitoring_Period'] == period)
+    df = df.query('`Room Status` > 0').loc[mask_period, ]
+    df = df.drop(columns=['Room Status', 'Season', 'Monitoring_Period', 'Diffuse radiation', 'Window State Change'])
+    fig, ax = plt.subplots(figsize=(11.7, 8.27))
+
+    mask = np.zeros_like(df.corr(method='spearman'))
+    mask[np.triu_indices_from(mask)] = True
+    labels = [col.replace('_', ' ') for col in df.columns]
+    hm = sns.heatmap(df.corr(method='spearman'), square=True,
+                     cmap='RdBu_r', linewidths=.5, annot=True, fmt='.2f',
+                     xticklabels=labels, yticklabels=labels,
+                     mask=mask, vmax=1., vmin=-1., ax=ax);
+    hm.figure.axes[-1].set_ylabel('Correlation coeficient', size=16)
+    hm.tick_params(labelsize=14)
+    hm.set_title(f"Correlation matrix for {room_name}. {period}", fontsize=16)
+    plt.tight_layout()
+    return fig
 
 
 

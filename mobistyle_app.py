@@ -84,7 +84,8 @@ def main():
         # st.subheader('Outdoor climate')
         option_out = st.selectbox('', options=['Temperature', 'RH', 'Solar radiation', 'Degree-days'])
         if 'Degree-days' in option_out:
-            st.pyplot(plot_hdd(hdd))
+            pass
+            #st.pyplot(plot_hdd(hdd))
         elif 'Temperature' in option_out:
             st.pyplot(plot_t_out(outdoor_data, 'Outdoor Temperature'))
         elif 'RH' in option_out:
@@ -160,12 +161,23 @@ def main():
      .add_legend(loc='upper right', fontsize=14))
     # st.pyplot(g)
 
+    st.subheader('Air quality categories')
+    st.pyplot(plot_comfort_cat_co2_voc(df, room_name, 'CO2'))
+    st.pyplot(plot_comfort_cat_co2_voc(df, room_name, 'VOC'))
+
     st.subheader('Open window detection')
     # option_user = st.selectbox('', options=['Window opening count', 'Room occupied time', 'Window open time'])
     st.pyplot(plot_monthly_window(df, room_name))
+    st.pyplot(plot_window_temp_out(df_daily, room_name))
 
-    if st.button('Correlation Heatmap'):
-        pass
+    st.subheader('Correlation Heatmap')
+    #if st.button('Correlation Heatmap'):
+
+    col1, col2 = st.beta_columns(2)
+    with col1:
+        st.pyplot(plot_corr_matrix(df_daily, room_name, 'BASELINE'))
+    with col2:
+        st.pyplot(plot_corr_matrix(df_daily, room_name, 'MOBISTYLE'))
 
 
 if __name__ == '__main__':
