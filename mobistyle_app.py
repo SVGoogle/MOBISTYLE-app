@@ -19,7 +19,7 @@ def main():
     room_dct = dict(zip(room_names, room_lst))
 
     room_info = pd.read_excel('./Data/room_info.xlsx', index_col='Room_ID', parse_dates=True).loc[room_lst, ]
-    room_info = room_info.rename(index=dict(zip(room_lst, room_names)))
+    room_info = room_info.rename(index=dict(zip(room_lst, room_names))).replace({pd.np.nan: None})
 
     hdd = pd.read_excel('./Data/HDDs_SL.xlsx', index_col='Timestamp', parse_dates=True,
                         usecols=[0, 1, 2], nrows=25)
@@ -64,8 +64,13 @@ def main():
         return data_dct
 
     with st.beta_expander("Building description"):
-        st.write("Describe building type, location, HVAC system...")
-        st.table(room_info)
+        st.write("This video shows an employee describing the sensors in the test room.")
+        embed_youtube = """
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/jwieVTpdKFY" frameborder="0" 
+        allow="accelerometer; &cc_load_policy=1 autoplay; clipboard-write; encrypted-media; gyroscope; 
+        picture-in-picture" allowfullscreen></iframe>
+        """
+        st.markdown(embed_youtube, unsafe_allow_html=True)
 
     # SIDEBAR
     st.sidebar.header('Visualization Features')
