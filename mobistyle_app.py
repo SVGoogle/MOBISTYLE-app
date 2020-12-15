@@ -153,6 +153,10 @@ def main():
     st.subheader('Thermal comfort categories')
     st.write("Indoor climate data is binned and categorized into comfort categories for a better visual representation "
              "according to European norm EN 15251:2007.")
+
+    st.pyplot(plot_comfort_cat_temp_rh(df, room_name, 'Temperature'))
+    st.pyplot(plot_comfort_cat_temp_rh(df, room_name, 'RH'))
+
     with st.beta_expander('Comfort category limits'):
         st.table(categories)
         st.write("""
@@ -160,9 +164,6 @@ def main():
         * DS/EN 15251 with sedentary activity level 1,2 [met]
         * VOC levels are categorized according to Table 1 in this source [LINK](https://iaqscience.lbl.gov/voc-intro)        
         """)
-
-    st.pyplot(plot_comfort_cat_temp_rh(df, room_name, 'Temperature'))
-    st.pyplot(plot_comfort_cat_temp_rh(df, room_name, 'RH'))
 
     g = sns.catplot(x='Category_TEMP', hue='Monitoring_Period', col='Season',
                     data=df, kind='count', order=labels_T_RH, legend=False, legend_out=True,
