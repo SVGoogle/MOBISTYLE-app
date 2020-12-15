@@ -227,7 +227,7 @@ def plot_comfort_cat_temp_rh(df, room_name, parameter):
     set_barh_text(BL_T, ax1)
     set_barh_text(MS_T, ax2)
     for ax in (ax1, ax2):
-        ax.set(xlim=(0, 100), xticklabels=[0, 20, 40, 60, 80, '100%'], ylabel='')
+        ax.set(xlim=(0, 100), xticks=[0, 20, 40, 60, 80, 100], xticklabels=[0, 20, 40, 60, 80, '100%'], ylabel='')
         ax.tick_params(axis='both', which='major', labelsize=14)
         ax.legend('')
     ax1.set_title('BASELINE')
@@ -257,7 +257,7 @@ def plot_comfort_cat_co2_voc(df, room_name, parameter):
     set_barh_text(MS_T, ax2)
 
     for ax in (ax1, ax2):
-        ax.set(xlim=(0, 100), xticklabels=[0, 20, 40, 60, 80, '100%'], ylabel='')
+        ax.set(xlim=(0, 100), xticks=[0, 20, 40, 60, 80, 100], xticklabels=[0, 20, 40, 60, 80, '100%'], ylabel='')
         ax.tick_params(axis='both', which='major', labelsize=14)
         ax.legend('')
     ax1.set_title('BASELINE')
@@ -324,12 +324,13 @@ def plot_corr_matrix(df, room_name, period):
     hm = sns.heatmap(df.corr(method='spearman'), square=True,
                      cmap='RdBu_r', linewidths=.5, annot=True, fmt='.2f',
                      xticklabels=labels, yticklabels=labels,
-                     mask=mask, vmax=1., vmin=-1., ax=ax);
+                     mask=mask, vmax=1., vmin=-1., ax=ax)
     hm.figure.axes[-1].set_ylabel('Correlation coeficient', size=16)
     hm.tick_params(labelsize=14)
     hm.set_title(f"Correlation matrix for {room_name}. {period}", fontsize=16)
     plt.tight_layout()
     return fig
+
 
 
 

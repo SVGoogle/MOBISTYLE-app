@@ -27,6 +27,7 @@ def main():
     outdoor_data = outdoor_data.rename(columns={'RH': 'Outdoor RH', 'Temperature': 'Outdoor Temperature'})
     outdoor_data.loc[BL_start: BL_end, 'Monitoring_Period'] = 'BASELINE'
     outdoor_data.loc[MS_start: MS_end, 'Monitoring_Period'] = 'MOBISTYLE'
+    categories = pd.read_excel('./Data/comfort_categories.xlsx', index_col='Category')
 
     # suppress_st_warning=True
     @st.cache(show_spinner=False)
@@ -85,7 +86,7 @@ def main():
         option_out = st.selectbox('', options=['Temperature', 'RH', 'Solar radiation', 'Degree-days'])
         if 'Degree-days' in option_out:
             pass
-            #st.pyplot(plot_hdd(hdd))
+            # st.pyplot(plot_hdd(hdd))
         elif 'Temperature' in option_out:
             st.pyplot(plot_t_out(outdoor_data, 'Outdoor Temperature'))
         elif 'RH' in option_out:
@@ -150,6 +151,15 @@ def main():
             st.pyplot(g)
 
     st.subheader('Thermal comfort categories')
+    st.write("Indoor climate data is binned and categorized into comfort categories for a better visual representation "
+             "according to European norm EN 15251:2007.")
+    with st.beta_expander('Comfort category limits'):
+        st.table(categories)
+        st.write("""
+        * CO2 concentration includes 400 ppm of an outdoor air concentration while estimating the category limits
+        * DS/EN 15251 with sedentary activity level 1,2 [met]
+        * VOC levels are categorized according to Table 1 in this source [LINK](https://iaqscience.lbl.gov/voc-intro)        
+        """)
 
     st.pyplot(plot_comfort_cat_temp_rh(df, room_name, 'Temperature'))
     st.pyplot(plot_comfort_cat_temp_rh(df, room_name, 'RH'))
@@ -171,7 +181,7 @@ def main():
     st.pyplot(plot_window_temp_out(df_daily, room_name))
 
     st.subheader('Correlation Heatmap')
-    #if st.button('Correlation Heatmap'):
+    # if st.button('Correlation Heatmap'):
 
     col1, col2 = st.beta_columns(2)
     with col1:
