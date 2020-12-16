@@ -97,10 +97,9 @@ MS_start, MS_end = '2019-02-1', '2020-02-1'
 
 
 # INDOOR CLIMATE
-def plot_temp(df, room_name):
+def plot_temp(df):
     fig, ax = plt.subplots(figsize=(11.7, 4), sharex=True)
-    df.loc[:, ['Temperature', 'Outdoor_Temperature']].plot(title='Office and Outdoor Air Temperature',
-                                                           color=['darkblue', 'grey'],
+    df.loc[:, ['Temperature', 'Outdoor Temperature']].plot(color=['darkblue', 'grey'],
                                                            linewidth=.4, ax=ax)
     ax.axvline(x='02-01-2019', color='orange', linestyle='--', linewidth=1)
     ax.fill_between(df.loc['02-01-2019':, :].index.values, -15, 40, facecolor=color_MS, alpha=0.1)
@@ -108,9 +107,11 @@ def plot_temp(df, room_name):
     ax.text(x='02-01-2019', y=-14, s='LED, Mobile App', color='red', size=12)
     ax.text(x='02-01-2019', y=37, s='MOBISTYLE', color=color_MS, size=12)
     ax.text(x='02-01-2018', y=37, s='BASELINE', color=color_BL, size=12)
-    ax.set(ylim=(-15, 40), xticks=pd.date_range(start='2018-02-1', periods=12, freq='2MS'), xlabel='',
+    ax.set(ylim=(-15, 40), xticks=pd.date_range(start='2018-02-1', periods=13, freq='2MS'), xlabel='',
            ylabel='($^o$C)')
-    ax.set_xticklabels(pd.date_range(start='2018-02-1', periods=12, freq='2MS').strftime('%b, %Y'), rotation=90)
+    ax.set_xticklabels(pd.date_range(start='2018-02-1', periods=13, freq='2MS').strftime('%b, %Y'), rotation=90)
+    ax.legend(['Office Temperature', 'Outdoor Temperature'], loc='lower right')
+    return fig
 
 
 def boxplot_monthly_temp(df, room_name):
