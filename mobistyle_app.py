@@ -6,15 +6,15 @@ import room
 def main():
     # NAVIGATION
     pages = {
-        "Project Description": home,
+        "Home": home,
         "Room Selection": room
     }
     st.sidebar.title('Navigation')
     selection = st.sidebar.radio('Go to', list(pages.keys()))
     page = pages[selection]
 
-    with st.spinner(f'Loading {selection} ...'):
-        page.app()
+    # with st.spinner(f'Loading {selection} ...'):
+    page.app()
 
     about_project = st.sidebar.beta_expander('About project')
     about_project.info("""      

@@ -1,22 +1,15 @@
 import streamlit as st
+import numpy as np
 from statplots import *
 
 
 def app():
-    st.header('Indoor Air Quality Visualization App')
-    st.write("""     
-    This app explores Indoor Air Quality (IAQ) at several educational office rooms. 
-    Main task of this visualization is to compare two monitoring periods - *BASELINE* and *MOBISTYLE*. 
-    """)
     st.title('Room Selection')
+    summary = st.beta_container()
 
     # LOAD DATA
-    room_lst = ['R3N0808', 'R2N0805', 'K1N0623', 'K3N0605', 'R3N0644', 'K1N0624', 'K3N0618', 'R2N0634']
-    room_names = ['Room %d' % i for i in range(1, 9)]
-    room_dct = dict(zip(room_names, room_lst))
-
     room_info = pd.read_excel('./Data/room_info.xlsx', index_col='Room_ID', parse_dates=True).loc[room_lst, ]
-    room_info = room_info.rename(index=dict(zip(room_lst, room_names))).replace({pd.np.nan: None})
+    room_info = room_info.rename(index=dict(zip(room_lst, room_names))).replace({np.nan: None})
 
     hdd = pd.read_excel('./Data/HDDs_SL.xlsx', index_col='Timestamp', parse_dates=True,
                         usecols=[0, 1, 2], nrows=25)
@@ -25,6 +18,18 @@ def app():
     outdoor_data.loc[BL_start: BL_end, 'Monitoring_Period'] = 'BASELINE'
     outdoor_data.loc[MS_start: MS_end, 'Monitoring_Period'] = 'MOBISTYLE'
     categories = pd.read_excel('./Data/comfort_categories.xlsx', index_col='Category')
+
+    def category_limits(key):
+        if st.checkbox('Comfort category limits', key=key):
+            st.table(categories)
+            st.write("""
+            * CO2 concentration includes 400 ppm of an outdoor air concentration while estimating the category limits
+            * DS/EN 15251 with sedentary activity level 1,2 [met]
+            * VOC levels are categorized according to Table 1 in this source 
+            [LINK](https://iaqscience.lbl.gov/voc-intro)        
+            """)
+
+    category_limits(1)
 
     # suppress_st_warning=True
     @st.cache(show_spinner=False)
@@ -60,6 +65,9 @@ def app():
                      }) for room in room_lst}
         return data_dct
 
+    # SUMMARY
+    summary.pyplot(plot_comfort_cat_summary_temp(get_data()), caption='Monitoring Periods')
+    # ROOM SELECTION
     room_name = st.selectbox('', room_names)
 
     # ROOM VISUALIZATION
@@ -86,8 +94,14 @@ def app():
     option_iaq = st.selectbox('', options=['Temperature', 'RH', 'CO2 levels', 'VOC levels'])
     if option_iaq == 'Temperature':
         st.pyplot(boxplot_monthly_temp(df, room_name))
+        if st.checkbox('Outdoor Temperature'):
+            st.pyplot(plot_t_out(outdoor_data, 'Outdoor Temperature'))
+
     if option_iaq == 'RH':
         st.pyplot(boxplot_monthly_rh(df, room_name))
+        if st.checkbox('Outdoor RH'):
+            st.pyplot(plot_t_out(outdoor_data, 'Outdoor RH'))
+
     if option_iaq == 'CO2 levels':
         st.pyplot(boxplot_monthly_co2(df, room_name))
         st.write('Comfort category IV+ corresponds to $CO_2$ concentration levels above *1200 ppm*.')
@@ -95,7 +109,7 @@ def app():
         st.pyplot(boxplot_monthly_voc(df, room_name))
         st.write('Comfort category IV+ corresponds to *VOC* concentration levels above *100 ppb*.')
 
-    st.subheader('Outdoor and indoor air temperature')
+    st.header('Outdoor and Office temperature')
 
     def hexbin(x, y, color, **kwargs):
         """Function to plot Hexbin using FacetGrid."""
@@ -124,13 +138,7 @@ def app():
     st.pyplot(plot_comfort_cat_temp_rh(df, room_name, 'Temperature'))
     st.pyplot(plot_comfort_cat_temp_rh(df, room_name, 'RH'))
 
-    with st.beta_expander('Comfort category limits'):
-        st.table(categories)
-        st.write("""
-        * CO2 concentration includes 400 ppm of an outdoor air concentration while estimating the category limits
-        * DS/EN 15251 with sedentary activity level 1,2 [met]
-        * VOC levels are categorized according to Table 1 in this source [LINK](https://iaqscience.lbl.gov/voc-intro)        
-        """)
+    category_limits(2)
 
     g = sns.catplot(x='Category_TEMP', hue='Monitoring_Period', col='Season',
                     data=df, kind='count', order=labels_T_RH, legend=False, legend_out=True,
@@ -139,17 +147,17 @@ def app():
      .add_legend(loc='upper right', fontsize=14))
     # st.pyplot(g)
 
-    st.subheader('Air quality categories')
+    st.header('Air quality categories')
     st.pyplot(plot_comfort_cat_co2_voc(df, room_name, 'CO2'))
     st.pyplot(plot_comfort_cat_co2_voc(df, room_name, 'VOC'))
+    category_limits(3)
 
-    st.subheader('Open window detection')
+    st.header('Open window detection')
     # option_user = st.selectbox('', options=['Window opening count', 'Room occupied time', 'Window open time'])
     st.pyplot(plot_monthly_window(df, room_name))
     st.pyplot(plot_window_temp_out(df_daily, room_name))
 
-    st.subheader('Correlation Heatmap')
-    # if st.button('Correlation Heatmap'):
+    st.header('Correlation Heatmap')
 
     col1, col2 = st.beta_columns(2)
     with col1:
@@ -158,7 +166,7 @@ def app():
         st.pyplot(plot_corr_matrix(df_daily, room_name, 'MOBISTYLE'))
 
     # OUTDOOR CLIMATE
-    with st.beta_expander('Outdoor climate'):
+    if st.button('Outdoor climate'):
         # st.subheader('Outdoor climate')
         option_out = st.selectbox('', options=['Temperature', 'RH', 'Solar radiation', 'Degree-days'])
         if 'Degree-days' in option_out:

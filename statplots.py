@@ -26,6 +26,11 @@ color_other = '#2ca02c'
 color_out = '#7f7f7f'
 color_missing = 'lightgrey'
 
+# Room list
+room_lst = ['R3N0808', 'R2N0805', 'K1N0623', 'K3N0605', 'R3N0644', 'K1N0624', 'K3N0618', 'R2N0634']
+room_names = ['Room %d' % i for i in range(1, 9)]
+room_dct = dict(zip(room_names, room_lst))
+
 
 def set_barh_text(df, ax):
     """Function to plot text in the middle of horizontal bar charts.
@@ -94,6 +99,58 @@ def plot_t_out(df, parameter='Outdoor Temperature'):
 # ROOM VISUALIZATION
 BL_start, BL_end = '2018-02-1', '2019-02-1'
 MS_start, MS_end = '2019-02-1', '2020-02-1'
+
+
+def stats_temp(df, room_name):
+    """This f-n calculates time distribution of indoor air temperature in comfort categories,
+    descriptive statistics (Min, Mean, St.Dev., Max.) and percentage of missing data.
+    """
+    df_T = pd.DataFrame(0, index=[room_name], columns=labels_T_RH + ['min', 'mean', 'std', 'max', 'Missing data'])
+
+    for cat in labels_T_RH:
+        df_T.loc[room_name, cat] = round(df['Category_TEMP'].isin([cat]).sum() * 100 / len(df['Category_TEMP']), 1)
+
+    df_T.loc[room_name, 'Missing data'] = round(df['Category_TEMP'].isna().sum() * 100 / len(df['Category_TEMP']), 1)
+
+    df_T.loc[room_name, ['max', 'mean', 'std', 'min']] = round(
+        df['Temperature'].agg(['min', 'mean', 'std', 'max']), 1)
+    return df_T.fillna(0)
+
+
+def plot_comfort_cat_summary_temp(data_dct):
+    all_BL, all_MS = [], []
+    for name, val in data_dct.items():
+        all_BL.append(stats_temp(val.loc[BL_start:BL_end, :].query('`Room Status` > 0'), name))
+        all_MS.append(stats_temp(val.loc[MS_start:MS_end, :].query('`Room Status` > 0'), name))
+        all_stats_BL = pd.concat(all_BL, sort=False)
+        all_stats_MS = pd.concat(all_MS, sort=False)
+
+    all_stats_BL = all_stats_BL.iloc[::-1].rename(index=dict(zip(room_lst, room_names)))
+    all_stats_MS = all_stats_MS.iloc[::-1].rename(index=dict(zip(room_lst, room_names)))
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(11.7, 6))
+    all_stats_BL.loc[:, labels_T_RH + ['Missing data']].plot(kind='barh', stacked=True, color=cmap_T_RH, ax=ax1)
+    all_stats_MS.loc[:, labels_T_RH + ['Missing data']].plot(kind='barh', stacked=True, color=cmap_T_RH, ax=ax2)
+
+    for ax in (ax1, ax2):
+        ax.set(xlim=(0, 100), xticklabels=[0, 20, 40, 60, 80, '100%'], ylabel='')
+        ax.tick_params(axis='both', which='major', labelsize=14)
+        ax.legend('')
+
+    set_barh_text(all_stats_BL.loc[:, labels_T_RH + ['Missing data']], ax1)
+    set_barh_text(all_stats_MS.loc[:, labels_T_RH + ['Missing data']], ax2)
+
+    ax1.set_title('BASELINE')
+    ax2.set_title('MOBISTYLE')
+    ax2.yaxis.set_label_position("right")
+    ax2.yaxis.tick_right()
+
+    plt.suptitle('Time Distribution (%) in Comfort Categories. Temperature (Room Occupied)',
+                 fontsize=14)
+    fig.legend(labels_T_RH + ['Missing data'], loc='lower center', bbox_to_anchor=(0.5, 0.0), ncol=8, fontsize=12)
+    fig.tight_layout()
+    fig.subplots_adjust(top=0.85, bottom=0.15)
+    return fig
 
 
 # INDOOR CLIMATE
